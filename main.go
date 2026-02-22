@@ -2,8 +2,9 @@ package main
 
 import (
 	"fmt"
-
+	"sync"
 	"main.go/data"
+	"main.go/models"
 	"main.go/services"
 )
 
@@ -23,8 +24,25 @@ func main() {
 	gameManagerService.EliminatePlayer("Diana")
 
 	alivePlayers := gameManagerService.GetAlivePlayers()
-	fmt.Println("Alive Players:")
-	for _, p := range alivePlayers {
-		fmt.Printf("- %s\n", p.Name) // Use %s for strings
+	winner, err := gameManagerService.EndGame(alivePlayers)
+
+	if err != nil {
+		fmt.Printf("Error determining winner: %s\n", err.Error())
 	}
+
+	statsManager := services.NewStatsManager(winner)
+
+	var wg sync.WaitGroup
+
+	for _, player := range mockPlayers {
+	   wg.Add(1)
+	   go func(p models.Player) {
+		   defer wg.Done()
+		   statsManager.CalculatePlayerStats(&p)
+	   }(player)
+	}
+
+	wg.Wait()
+	
+	statsManager.GetOverallStats()
 }

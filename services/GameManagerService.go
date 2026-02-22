@@ -3,17 +3,18 @@ package services
 import (
 	"errors"
 	"fmt"
-
+	"main.go/constants"
 	"main.go/models"
 )
 
 type GameManagerService interface {
-	RegisterPlayer(name string, role models.Role) (models.Player, error)
+	RegisterPlayer(name string, role constants.Role) (models.Player, error)
 	StartGame(players []models.Player) error
 	EliminatePlayer(playerName string) error
 	RemovePlayer(playerName string) error
 	GetAlivePlayers() []models.Player
-	GetPlayerRole(playerName string) (models.Role, error)
+	GetPlayerRole(playerName string) (constants.Role, error)
+	EndGame(alicvePlayers []models.Player) (string, error)
 }
 
 type gameManager struct {
@@ -27,7 +28,7 @@ func NewGameManager() GameManagerService {
 }
 
 // Implement the methods of GameManagerService interface here
-func (gm *gameManager) RegisterPlayer(name string, role models.Role) (models.Player, error) {
+func (gm *gameManager) RegisterPlayer(name string, role constants.Role) (models.Player, error) {
 	newPlayer := models.Player{
 		Id: len(gm.players) + 1,
 		Name: name,
@@ -57,7 +58,7 @@ func (gm *gameManager) GetAlivePlayers() []models.Player {
 	return alivePlayers
 }
 
-func (gm *gameManager) GetPlayerRole(playerName string) (models.Role, error) {
+func (gm *gameManager) GetPlayerRole(playerName string) (constants.Role, error) {
 	for _, p := range gm.players {
 		if p.Name == playerName {
 			return p.Role, nil
@@ -99,4 +100,25 @@ func (gm *gameManager) EliminatePlayer(playerName string) error {
 	}
 
 	return errors.New("PLayer not found");
+}
+
+func (gm *gameManager) EndGame(alicvePlayers []models.Player) (string, error) {
+	mafiaCount := 0
+	civilianCount := 0
+
+	for _, p := range alicvePlayers {
+		switch p.Role {
+        case constants.Mafia, constants.Don:
+			mafiaCount++
+		case constants.Civilian, constants.Sheriff:
+			civilianCount++
+		}
+	}
+
+	if mafiaCount == 0 {
+		return string(constants.Civilians), nil
+	} 
+	
+	return string(constants.Criminals), nil
+	
 }
