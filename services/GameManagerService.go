@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 
 	"main.go/models"
 )
@@ -10,6 +11,7 @@ type GameManagerService interface {
 	RegisterPlayer(name string, role models.Role) (models.Player, error)
 	StartGame(players []models.Player) error
 	EliminatePlayer(playerName string) error
+	RemovePlayer(playerName string) error
 	GetAlivePlayers() []models.Player
 	GetPlayerRole(playerName string) (models.Role, error)
 }
@@ -40,8 +42,8 @@ func (gm *gameManager) RegisterPlayer(name string, role models.Role) (models.Pla
 	return newPlayer, nil
 }
 
-func (gm *gameManager) StartGame(players []models.Player) error {
-	// Logic to start the game
+func (gm *gameManager) StartGame(players []models.Player) error {	
+	fmt.Printf("Starting game with %d players...\n", len(players))
 	return nil
 }
 
@@ -64,7 +66,7 @@ func (gm *gameManager) GetPlayerRole(playerName string) (models.Role, error) {
 	return 0, errors.New("player not found: " + playerName)
 }
 
-func (gm *gameManager) EliminatePlayer(playerName string) error {
+func (gm *gameManager) RemovePlayer(playerName string) error {
 	targetIndex := -1
 
     // 1. Manual loop through the SLICE of structs
@@ -85,4 +87,16 @@ func (gm *gameManager) EliminatePlayer(playerName string) error {
 	gm.players = gm.players[:len(gm.players)-1] // Pop the last element
     
     return nil
+}
+
+func (gm *gameManager) EliminatePlayer(playerName string) error {
+	for index, p := range gm.players {
+		if p.Name == playerName {
+			gm.players[index].Alive = false
+			gm.players[index].Eliminated = true
+			return nil
+		}
+	}
+
+	return errors.New("PLayer not found");
 }
